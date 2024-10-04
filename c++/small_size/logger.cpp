@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <unistd.h>
 
+LogLevel Logger::logLevel{LogLevel::INFO};
 Logger &Logger::getLogger(const char *name)
 {
     std::string nameStr = (name && name[0] != '\0') ? std::string(name) : "";
@@ -271,19 +272,41 @@ void Logger::rotateFileSink()
     }
 }
 
-LogLevel Logger::logLevel{LogLevel::INFO};
 int main() {
-    //Default logger    
-    Logger &logger = Logger::getLogger("test");
-    logger.setLevel("INFO");
-    logger.info("This is an info message");
-    logger.critical("This is a critical message");
+    auto & log_1 = Logger::getLogger("console without formatting");
+    log_1.setLevel("DEBUG");
+    log_1.setConsoleSink(true,false, false);    
+    log_1.info("This is an info message");
+    log_1.critical("This is a critical message");
+
+    auto & log_2 = Logger::getLogger("console with colors");
+    log_2.setLevel("TRACE");
+    log_2.setConsoleSink(true,false, true);    
+    log_2.warn("Only with colors");
+    log_2.info("This is an info message");
+    log_2.critical("This is a critical message  ");
+    log_2.trace("This is a trace message  ");
+    log_2.warn("Close console logger");
+
+
+
+
 
     //Rotate logger
     Logger &rotateLogger = Logger::getLogger("rotate");
+    rotateLogger.setConsoleSink(false);
     rotateLogger.setRotateFileSink(true, "rotate.log", 10 * 1024 * 1024, 5);
     rotateLogger.info("This is an info message");
     rotateLogger.critical("This is a critical message");
+
+    auto & log_console_all = Logger::getLogger("console with formatting");
+    rotateLogger.setConsoleSink(true);
+    log_console_all.setLevel("TRACE");
+    log_console_all.setConsoleSink(true,true, true);    
+    log_console_all.warn("Open console logger %s", "with formatting");
+    log_console_all.info("This is an info message %d", 1);
+    log_console_all.critical("This is a critical message  %d", 2);
+    log_console_all.trace("This is a trace message  %d", 3);
     return 0;
 }
 
