@@ -130,13 +130,27 @@ static ASyncTask stdin_and_timer(struct ev_loop* loop) {
         auto v = co_await async_read(loop);
         logger.info("Read Value %s", v.c_str());
         //co_await timer;  // 等待定时器
+        co_await alternating_timers(loop);
     }
 }
+class A 
+{
+public:
+    ASyncTask init(struct ev_loop* loop)
+    {
+        co_await alternating_timers(loop);
+        auto v = co_await async_read(loop);
+        logger.info("Read Value %s", v.c_str());
+
+    }
+};
 
 int main() {
     struct ev_loop* loop = EV_DEFAULT;
-    alternating_timers(loop);
-    stdin_and_timer(loop);
+    //alternating_timers(loop);
+    //stdin_and_timer(loop);
+    A a;
+    a.init(loop);
     ev_run(loop, 0);
 
     return 0;
