@@ -271,8 +271,13 @@ void Logger::rotateFileSink()
         }
     }
 }
-
+#if 0
 int main() {
+    //Rotate logger
+    Logger &rotateLogger = Logger::getLogger("rotate");
+    Logger::setRotateFileSink(true, "rotate.log",  1024, 5);
+
+
     auto & log_1 = Logger::getLogger("console without formatting");
     log_1.setLevel("DEBUG");
     log_1.setConsoleSink(true,false, false);    
@@ -288,14 +293,7 @@ int main() {
     log_2.trace("This is a trace message  ");
     log_2.warn("Close console logger");
 
-
-
-
-
-    //Rotate logger
-    Logger &rotateLogger = Logger::getLogger("rotate");
     rotateLogger.setConsoleSink(false);
-    rotateLogger.setRotateFileSink(true, "rotate.log", 10 * 1024 * 1024, 5);
     rotateLogger.info("This is an info message");
     rotateLogger.critical("This is a critical message");
 
@@ -307,6 +305,11 @@ int main() {
     log_console_all.info("This is an info message %d", 1);
     log_console_all.critical("This is a critical message  %d", 2);
     log_console_all.trace("This is a trace message  %d", 3);
+
+    //Test rotate logger
+    rotateLogger.info("This is an info message");
+    rotateLogger.critical("This is a critical message");
     return 0;
 }
 
+#endif
