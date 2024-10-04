@@ -27,6 +27,7 @@ class LoggerOutput
 
     LoggerOutput();
     virtual ~LoggerOutput() {}
+    void flush();
 
   private:
     static constexpr size_t MSG_BUF_SIZE = 8192;
@@ -62,7 +63,7 @@ class Logger
     void info(const char *fmt, ...);
     void debug(const char *fmt, ...);
     void trace(const char *fmt, ...);
-
+    void flush() { loggerOutput_->flush(); }
   private:
     std::string name_;
     std::string nameFormatted_;

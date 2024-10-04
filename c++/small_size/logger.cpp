@@ -193,6 +193,12 @@ void LoggerOutput::rotateFileSink()
         }
     }
 }
+void LoggerOutput::flush()
+{
+    if (rotateFileSinkFile_) {
+        fflush(rotateFileSinkFile_);
+    }
+}   
 Logger::Logger(const std::string &name)
     : name_(name), loggerOutput_(LoggerOutput::instance())
 {
