@@ -1,0 +1,33 @@
+
+## id3 Usage
+
+- id3 01.\ Situation\ 1.mp3
+- history|grep id3
+- id3 -t '%1.Exercice.%2' -n '%2' -a ‘Chapitre1-Chapitre4’ -l 'Chapitre1-Chapitre4' '*. Exercice*.mp3'
+- id3 74.\ Exercice\ 31.mp3
+- id3 -t '%1.Exercice.%2' -n '%1' -a ‘Chapitre1-Chapitre4’ -l 'Chapitre1-Chapitre4' '*. Exercice*.mp3'
+- id3 74.\ Exercice\ 31.mp3
+- id3 -t '%1.Exercice.%2' -n '%1' -a ‘Chapitre5-Chapitre10’ -l 'Chapitre5-Chapitre10' '*. Exercice*.mp3'
+- id3 74.\ Exercice\ 22.mp3
+- history| grep id3
+- man id3
+- id3 --help
+- id3
+- id3 -h
+- id3 S01E03.mp3
+- id3 -f '%3.mp3'   '*.*.*.mp3'
+- id3 -f '%3.mp3'   '*.*.*.mp3'
+- id3 -f '%3.mp3'   '*.*.*.mp3'
+- id3 -f '%3.mp3'   '*.*.*.mp3'
+- id3 -f '%3.mp3'   '*.*.*.*.mp3'
+- id3 -f '%3.mp3'   'Modern*.*.*.*.mp3'
+- id3 -f '%4.mp3'   '*.*.*.*.*.mp3'
+- id3 -f '%1.mp3' '* [*.mp3'
+- id3 -f '%1.mp3' '*.*.mp3''
+- id3 -f '%1.mp3' '*.*.mp3'
+- id3 -f '%1.mp3' '*.*.mp3'
+- id3 S09E04.mp3
+- id3 -h
+- id3 -h
+- id3 -t 'Modern Family S%1E%2' 'S*E*.mp3'
+- id3 S09E04.mp3
