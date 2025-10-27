@@ -16,45 +16,73 @@ def print_us_visa_wait_time():
     # Create a Beautiful Soup object
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    # CSS selector to target the main table body
-    table_body_selector = "body > div.tsg-rwd-body-frame-row > div:nth-child(5) > div.tsg-rwd-main-copy-frame.dataCSIpage > div > div.tsg-rwd-content-page-parsysxxx.parsys > div:nth-child(3) > div > p > table > tbody"
-    table_body = soup.select_one(table_body_selector)
+    # Find the table (simpler approach since page structure changed)
+    table = soup.find('table')
 
-    # Check if the table body exists
-    if not table_body:
-        raise ValueError("Table body not found with the specified selector.")
+    # Check if the table exists
+    if not table:
+        raise ValueError("Table not found on the page.")
 
-    # CSS selector to retrieve the visa type text
-    visa_type_selector = "tr:nth-child(1) > th:nth-child(5) > p:nth-child(2)"
-    visa_type = table_body.select_one(visa_type_selector)
-
-    # Assert visa type
-    assert visa_type.text.strip() == "Visitors (B1/B2)", f"Visa type mismatch: found {visa_type.text.strip()}"
+    # Verify the visa type column header (B1/B2 Average wait times is now in column 1)
+    header_row = table.find('tr')
+    if header_row:
+        headers = header_row.find_all('th')
+        if len(headers) > 1:
+            visa_header = headers[1].text.strip()
+            assert 'B1/B2' in visa_header and 'Average wait times' in visa_header, \
+                f"Visa type mismatch: found {visa_header}"
 
     # List of valid cities
     valid_cities_ca = ["Calgary", "Halifax", "Montreal", "Ottawa", "Quebec", "Toronto", "Vancouver"]
     valid_cities_cn = ["Beijing", "Chengdu", "Guangzhou", "Hong Kong", "Shanghai", "Shenyang", "Wuhan"]
     valid_cities    = valid_cities_ca + valid_cities_cn
-    # Extract city and days data from table
-    city_days = []
-    for tr in table_body.select('tr'):
+    # Extract city and wait time data from table
+    city_months = []
+    for tr in table.find_all('tr'):
         td_elements = tr.find_all('td')
-        if len(td_elements) >= 5:  # Ensure there are at least 5 columns
+        if len(td_elements) >= 2:  # Ensure there are at least 2 columns
             city = td_elements[0].text.strip()
             if city not in valid_cities:
                 continue
-            days = td_elements[4].text.strip().split()[0]
-            if days == "" or not days[0].isdigit():
+            
+            # B1/B2 Average wait times is now in column 1
+            wait_time_text = td_elements[1].text.strip()
+            
+            # Skip if NA or empty
+            if wait_time_text == "NA" or wait_time_text == "":
                 continue
-            days = int(days)  # Convert days to integer for sorting
-            city_days.append((city, days))
+            
+            # Parse the wait time (e.g., "5 Months", "< 0.5 month", "12 months")
+            wait_time_parts = wait_time_text.split()
+            if len(wait_time_parts) < 2:
+                continue
+            
+            # Extract numeric value
+            month_str = wait_time_parts[0]
+            if month_str.startswith('<'):
+                # Handle "< 0.5 month" cases - treat as 0.5
+                if len(wait_time_parts) >= 2:
+                    month_str = wait_time_parts[1]
+            
+            try:
+                months = float(month_str)
+                city_months.append((city, months))
+            except ValueError:
+                # Skip if we can't parse the number
+                continue
 
-    # Sort list by days in descending order
-    city_days.sort(key=lambda x: x[1], reverse=True)
+    # Sort list by months in descending order
+    city_months.sort(key=lambda x: x[1], reverse=True)
 
-    # Print the sorted city and days
-    for city, days in city_days:
-        print(f"{city:<15} {days} days")
+    # Print the sorted city and months
+    for city, months in city_months:
+        if months == int(months):
+            month_value = int(months)
+            month_label = "month" if month_value == 1 else "months"
+            print(f"{city:<15} {month_value} {month_label}")
+        else:
+            month_label = "month" if months == 1 else "months"
+            print(f"{city:<15} {months} {month_label}")
 
 
 if __name__ == "__main__":
