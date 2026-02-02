@@ -1,0 +1,14 @@
+{
+  "projects": [
+    {
+      "name": "Edge Solution Prod",
+      "mirrorRoot": "/home/lxr/W_urgent/done.edge solution Prod",
+      "repos": [
+        { "name": "buspas_base_imgs" },
+        { "name": "edge-experiments" },
+        { "name": "ESP32_interface" },
+        { "name": "StrawHats" }
+      ]
+    }
+  ]
+}

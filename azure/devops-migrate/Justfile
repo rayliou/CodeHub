@@ -1,0 +1,45 @@
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+# ===== Set your parameters =====
+
+ORG_SRC := "https://dev.azure.com/BusPas"
+ORG_DST := "https://dev.azure.com/BusPasDevOps"
+PROJECT2 := "Edge Solution Prod"
+MIRROR_ROOT := "./mirrors"
+MIRROR_ROOT_SYNC := "/home/lxr/W_urgent/done.edge solution Prod"
+PROJECTS_JSON := "./config/projects.json"
+PUSH_MIRRORS := "0"
+
+# Optional: export your PAT (recommended)
+# export AZURE_DEVOPS_EXT_PAT=xxxxxx
+
+default:
+    @just --list
+
+# 0) Basic az devops check
+az-check:
+    az --version
+    az devops -h >/dev/null
+
+# 1) (Optional) list local mirrors to JSON (projects.json format)
+list-local:
+    scripts/10-list-local-mirrors.sh "{{ MIRROR_ROOT }}" "{{ PROJECT2 }}"
+
+# 1b) Sync local mirrors from their remotes (all *.git under mirror_root)
+local-sync-mirrors:
+    scripts/15-sync-local-mirrors.sh "{{ MIRROR_ROOT_SYNC }}"
+
+# 2) Create missing repos in dst/project2 (JSON Lines output)
+dst-create-repos:
+    scripts/20-create-repos-dst.sh "{{ ORG_DST }}" "{{ PROJECT2 }}" "{{ PROJECTS_JSON }}"
+
+# 3) Push mirrors to dst/project2 (JSON Lines output)
+dst-push-mirrors:
+    PUSH_MIRRORS="{{ PUSH_MIRRORS }}" scripts/30-push-mirrors-dst.sh "{{ ORG_DST }}" "{{ PROJECT2 }}" "{{ MIRROR_ROOT }}" "{{ PROJECTS_JSON }}"
+
+# 3b) Push mirrors to dst/project2 (live)
+dst-push-mirrors-live:
+    PUSH_MIRRORS="1" scripts/30-push-mirrors-dst.sh "{{ ORG_DST }}" "{{ PROJECT2 }}" "{{ MIRROR_ROOT }}" "{{ PROJECTS_JSON }}"
+
+# 4) One shot: create then push
+dst-sync: dst-create-repos dst-push-mirrors
