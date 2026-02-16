@@ -1,0 +1,155 @@
+set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
+
+# Destination ACR
+#DEST_REGISTRY_NAME := "buspasacr"
+DEST_REGISTRY_NAME := "dockerbpacr"
+
+# Default: show available recipes
+default:
+    @just --list
+
+# Source ACR #1: socrates
+SOCRATES_REGISTRY_URL := "buspas.azurecr.io"
+SOCRATES_USER := "buspas"
+# Override at runtime if needed: SOCRATES_PASSWORD=... just import-socrates-all
+SOCRATES_PASSWORD := env_var_or_default("SOCRATES_PASSWORD", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+SOCRATES_TAG := "buspas.01.01.02-arm64v8"
+SOCRATES_IMAGES := "accelerometer button cmsdisplay frontlight heartbeat heaterenv imagecapture lightsensor pir powermanager schedulertex speaker streetlight"
+
+# Source ACR #2: plato
+PLATO_REGISTRY_URL := "buspasdevcr.azurecr.io"
+PLATO_USER := "buspasdevcr"
+# Override at runtime if needed: PLATO_PASSWORD=... just import-plato-all
+PLATO_PASSWORD := env_var_or_default("PLATO_PASSWORD", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+PLATO_TAG := "mppt-test.01.01.02-arm64v8"
+PLATO_IMAGES := "mppt"
+
+# Source ACR #3: pipelinedevbuspas
+PIPELINE_REGISTRY_URL := "pipelinedevbuspas.azurecr.io"
+PIPELINE_USER := "pipelinedevbuspas"
+# Override at runtime if needed: PIPELINE_PASSWORD=... just import-pipeline-all
+PIPELINE_PASSWORD := env_var_or_default("PIPELINE_PASSWORD", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+PIPELINE_TAG := "lxr.01.01.14-arm64v8"
+PIPELINE_IMAGES := "dspy"
+
+# Import one image from socrates (tag can be overridden)
+import-socrates image tag=SOCRATES_TAG:
+    @echo "Importing {{image}}:{{tag}} from {{SOCRATES_REGISTRY_URL}} -> {{DEST_REGISTRY_NAME}}"
+    @output="$(az acr import \
+      --name {{DEST_REGISTRY_NAME}} \
+      --source {{SOCRATES_REGISTRY_URL}}/{{image}}:{{tag}} \
+      --image {{image}}:{{tag}} \
+      --username {{SOCRATES_USER}} \
+      --password {{SOCRATES_PASSWORD}} 2>&1)" || { \
+        if printf '%s\n' "$output" | rg -q "already exists in target registry"; then \
+          echo "Skip existing: {{image}}:{{tag}}"; \
+        else \
+          printf '%s\n' "$output"; \
+          exit 1; \
+        fi; \
+      }
+
+# Import all images from socrates
+import-socrates-all:
+    @for image in {{SOCRATES_IMAGES}}; do \
+      just import-socrates "$image"; \
+    done
+
+# Import one image from plato (tag can be overridden)
+import-plato image tag=PLATO_TAG:
+    @echo "Importing {{image}}:{{tag}} from {{PLATO_REGISTRY_URL}} -> {{DEST_REGISTRY_NAME}}"
+    @output="$(az acr import \
+      --name {{DEST_REGISTRY_NAME}} \
+      --source {{PLATO_REGISTRY_URL}}/{{image}}:{{tag}} \
+      --image {{image}}:{{tag}} \
+      --username {{PLATO_USER}} \
+      --password {{PLATO_PASSWORD}} 2>&1)" || { \
+        if printf '%s\n' "$output" | rg -q "already exists in target registry"; then \
+          echo "Skip existing: {{image}}:{{tag}}"; \
+        else \
+          printf '%s\n' "$output"; \
+          exit 1; \
+        fi; \
+      }
+
+# Import all images from plato
+import-plato-all:
+    @for image in {{PLATO_IMAGES}}; do \
+      just import-plato "$image"; \
+    done
+
+# Import one image from pipelinedevbuspas (tag can be overridden)
+import-pipeline image tag=PIPELINE_TAG:
+    @echo "Importing {{image}}:{{tag}} from {{PIPELINE_REGISTRY_URL}} -> {{DEST_REGISTRY_NAME}}"
+    @output="$(az acr import \
+      --name {{DEST_REGISTRY_NAME}} \
+      --source {{PIPELINE_REGISTRY_URL}}/{{image}}:{{tag}} \
+      --image {{image}}:{{tag}} \
+      --username {{PIPELINE_USER}} \
+      --password {{PIPELINE_PASSWORD}} 2>&1)" || { \
+        if printf '%s\n' "$output" | rg -q "already exists in target registry"; then \
+          echo "Skip existing: {{image}}:{{tag}}"; \
+        else \
+          printf '%s\n' "$output"; \
+          exit 1; \
+        fi; \
+      }
+
+# Import all images from pipelinedevbuspas
+import-pipeline-all:
+    @for image in {{PIPELINE_IMAGES}}; do \
+      just import-pipeline "$image"; \
+    done
+
+# Import all source registries
+import-all:
+    just import-socrates-all
+    just import-plato-all
+    just import-pipeline-all
+
+# Per-container convenience targets (socrates)
+import-accelerometer:
+    just import-socrates accelerometer
+
+import-button:
+    just import-socrates button
+
+import-cmsdisplay:
+    just import-socrates cmsdisplay
+
+import-frontlight:
+    just import-socrates frontlight
+
+import-heartbeat:
+    just import-socrates heartbeat
+
+import-heaterenv:
+    just import-socrates heaterenv
+
+import-imagecapture:
+    just import-socrates imagecapture
+
+import-lightsensor:
+    just import-socrates lightsensor
+
+import-pir:
+    just import-socrates pir
+
+import-powermanager:
+    just import-socrates powermanager
+
+import-schedule:
+    just import-socrates schedulertex
+
+import-speaker:
+    just import-socrates speaker
+
+import-streetlight:
+    just import-socrates streetlight
+
+# Per-container convenience targets (plato/pipelinedevbuspas)
+import-mppt:
+    just import-plato mppt
+
+import-dspy:
+    just import-pipeline dspy
