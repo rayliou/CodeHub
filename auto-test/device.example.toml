@@ -1,0 +1,22 @@
+[ssh]
+host = "192.168.1.100"
+port = 22
+username = "root"
+password = "password"
+# key_filename = "/home/you/.ssh/id_rsa"
+timeout = 15
+remote_tmp_dir = "/tmp/pytest-cases"
+sync_enabled = true
+sync_local_dir = "cases"
+sync_remote_dir = "/tmp/pytest-cases/cases"
+sync_delete = true
+
+[serial]
+port = "/dev/ttyUSB0"
+baudrate = 115200
+username = "root"
+password = "password"
+prompt_regex = "root@.+#\\s*$"
+timeout = 20
+login_timeout = 30
+remote_tmp_dir = "/tmp/pytest-cases"
