@@ -1,0 +1,42 @@
+ARG BUILDPLATFORM
+ARG TARGETPLATFORM
+
+FROM --platform=${BUILDPLATFORM} debian:bookworm AS build
+
+RUN dpkg --add-architecture arm64 \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        cmake \
+        crossbuild-essential-arm64 \
+        file \
+        libcurl4-openssl-dev:arm64 \
+        pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /src
+COPY . .
+
+RUN cmake -S . -B build-arm64 \
+        -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/aarch64-linux-gnu.cmake \
+        -DCURL_INCLUDE_DIR=/usr/include/aarch64-linux-gnu \
+        -DCURL_LIBRARY=/usr/lib/aarch64-linux-gnu/libcurl.so \
+    && cmake --build build-arm64 --target edge_probe_vm_fixture_sender edge_probe_tests \
+    && file build-arm64/edge_probe_vm_fixture_sender build-arm64/edge_probe_tests
+
+FROM debian:bookworm-slim
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        libcurl4 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt/edge-probe
+
+COPY --from=build /src/build-arm64/edge_probe_vm_fixture_sender /usr/local/bin/edge_probe_vm_fixture_sender
+COPY --from=build /src/build-arm64/edge_probe_tests /usr/local/bin/edge_probe_tests
+COPY --from=build /src/cmd.txt /opt/edge-probe/cmd.txt
+COPY --from=build /src/cmd.txt /src/cmd.txt
+
+ENTRYPOINT ["/usr/local/bin/edge_probe_vm_fixture_sender"]
